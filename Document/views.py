@@ -104,8 +104,8 @@ def file_to_base64(request):
 
     if file_extension in image_extensions:
         try:
-            # Open the image file
-            with Image.open(absolute_path) as img:
+            # Open the image file using the alias
+            with PILImage.open(absolute_path) as img:
                 # Get image properties
                 width, height = img.size
                 # Read the image content and encode to base64
@@ -113,9 +113,7 @@ def file_to_base64(request):
                     base64_data = base64.b64encode(file.read()).decode("utf-8")
                 # Return base64 data and image properties
                 return Response({
-                    "base64": base64_data,
-                    "width": width,
-                    "height": height
+                    "base64": base64_data
                 }, status=status.HTTP_200_OK)
         except PermissionError:
             return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
@@ -135,4 +133,4 @@ def file_to_base64(request):
         except Exception as e:
             return Response({"error": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        return Response({"error": "Unsupported file type"}, status=status.HTTP_400_BAD_REQUEST)    
+        return Response({"error": "Unsupported file type"}, status=status.HTTP_400_BAD_REQUEST)
