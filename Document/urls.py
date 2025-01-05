@@ -29,7 +29,10 @@ urlpatterns = [
     # Rotate an image
     path('rotate/', rotate_image, name='rotate-image'),
 
-    
+    # Convert a PDF to images
+    path('convert_pdf_to_image/', convert_pdf_to_image, name='convert-pdf-to-image'),
+
+
 
 
 ]

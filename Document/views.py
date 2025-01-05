@@ -12,6 +12,8 @@ from PIL import Image as PILImage, UnidentifiedImageError
 from PyPDF2 import PdfReader
 from PyPDF2.errors import PdfReadError
 import uuid  # For generating unique filenames
+import fitz  # PyMuPDF
+
 
 # Create your views here.
 @api_view(['POST'])
@@ -218,5 +220,53 @@ def rotate_image(request):
 
     except Image.DoesNotExist:
         return Response({"error": "Image not found"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"error": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+def convert_pdf_to_image(request):
+    pdf_id = request.data.get('pdf_id')
+    if not pdf_id:
+        return Response({"error": "PDF ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        # Get the PDF object
+        pdf = PDF.objects.get(id=pdf_id)
+        pdf.file.seek(0)
+        pdf_content = pdf.file.read()
+
+        # Open the PDF using PyMuPDF
+        pdf_document = fitz.open(stream=pdf_content, filetype="pdf")
+        image_list = []
+
+        # Convert each page to an image
+        for page_num in range(len(pdf_document)):
+            page = pdf_document[page_num]
+            pix = page.get_pixmap()
+            img_data = pix.tobytes()
+
+            # Create a PIL Image object from the image data
+            pil_image = PILImage.open(io.BytesIO(img_data))
+
+            # Extract image metadata
+            width, height = pil_image.size
+            channels = len(pil_image.getbands())
+
+            # Save the image to a ContentFile
+            buffer = io.BytesIO()
+            pil_image.save(buffer, format="PNG")
+            image_file = ContentFile(buffer.getvalue(), name=f'page_{page_num+1}.png')
+
+            # Save the image to the database
+            new_image = Image(file=image_file, width=width, height=height, channels=channels)
+            new_image.save()
+
+            # Serialize the image and add it to the response list
+            image_list.append(ImageSerializer(new_image).data)
+
+        return Response(image_list, status=status.HTTP_200_OK)
+
+    except PDF.DoesNotExist:
+        return Response({"error": "PDF not found"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({"error": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
