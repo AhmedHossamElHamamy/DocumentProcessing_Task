@@ -134,3 +134,22 @@ def file_to_base64(request):
             return Response({"error": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         return Response({"error": "Unsupported file type"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def image_list(request):
+    try:
+        images = Image.objects.all()
+        serializer = ImageSerializer(images, many=True)
+        return Response(serializer.data)
+    except Exception as e:
+        return Response({"error": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def pdf_list(request):
+    try:
+        pdfs = PDF.objects.all()
+        serializer = PDFSerializer(pdfs, many=True)
+        return Response(serializer.data)
+    except Exception as e:
+        return Response({"error": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
