@@ -26,6 +26,9 @@ urlpatterns = [
     # Delete a specific PDF
     path('pdfs/delete/<int:id>', pdf_delete, name='pdf-delete'),
 
+    # Rotate an image
+    path('rotate/', rotate_image, name='rotate-image'),
+
     
 
 
