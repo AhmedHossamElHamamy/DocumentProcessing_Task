@@ -14,5 +14,11 @@ urlpatterns = [
     # List all PDFs
     path('pdfs/', pdf_list, name='pdf-list'),
 
+    # Retrieve details of a specific image
+    path('images/<int:id>/', image_detail, name='image-detail'),
+
+    # Retrieve details of a specific PDF
+    path('pdfs/<int:id>/', pdf_detail, name='pdf-detail'),
+
 
 ]

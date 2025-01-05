@@ -1,5 +1,5 @@
 import os
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -150,6 +150,24 @@ def pdf_list(request):
     try:
         pdfs = PDF.objects.all()
         serializer = PDFSerializer(pdfs, many=True)
+        return Response(serializer.data)
+    except Exception as e:
+        return Response({"error": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def image_detail(request, id):
+    try:
+        image = get_object_or_404(Image, id=id)
+        serializer = ImageSerializer(image)
+        return Response(serializer.data)
+    except Exception as e:
+        return Response({"error": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def pdf_detail(request, id):
+    try:
+        pdf = get_object_or_404(PDF, id=id)
+        serializer = PDFSerializer(pdf)
         return Response(serializer.data)
     except Exception as e:
         return Response({"error": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
