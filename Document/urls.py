@@ -20,5 +20,11 @@ urlpatterns = [
     # Retrieve details of a specific PDF
     path('pdfs/<int:id>/', pdf_detail, name='pdf-detail'),
 
+    # Delete a specific image
+    path('images/delete/<int:id>', image_delete, name='image-delete'),
+
+    # Delete a specific PDF
+    path('pdfs/delete/<int:id>', pdf_delete, name='pdf-delete'),
+
 
 ]

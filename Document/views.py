@@ -171,3 +171,23 @@ def pdf_detail(request, id):
         return Response(serializer.data)
     except Exception as e:
         return Response({"error": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['DELETE'])
+def image_delete(request, id):
+    try:
+        image = get_object_or_404(Image, id=id)
+        image.file.delete()  # Delete the file from the filesystem
+        image.delete()  # Delete the record from the database
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    except Exception as e:
+        return Response({"error": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['DELETE'])
+def pdf_delete(request, id):
+    try:
+        pdf = get_object_or_404(PDF, id=id)
+        pdf.file.delete()  # Delete the file from the filesystem
+        pdf.delete()  # Delete the record from the database
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    except Exception as e:
+        return Response({"error": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
