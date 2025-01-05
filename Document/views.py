@@ -1,3 +1,4 @@
+import io
 import os
 from django.shortcuts import get_object_or_404, render
 from rest_framework.decorators import api_view
@@ -189,5 +190,33 @@ def pdf_delete(request, id):
         pdf.file.delete()  # Delete the file from the filesystem
         pdf.delete()  # Delete the record from the database
         return Response(status=status.HTTP_204_NO_CONTENT)
+    except Exception as e:
+        return Response({"error": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+def rotate_image(request):
+    image_id = request.data.get('image_id')
+    angle = request.data.get('angle')
+
+    # Validate required fields
+    if not image_id:
+        return Response({"error": "Image ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+    if not angle:
+        return Response({"error": "Rotation angle is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        image = Image.objects.get(id=image_id)
+        pil_image = PILImage.open(image.file)
+        rotated_image = pil_image.rotate(int(angle))
+        buffer = io.BytesIO()
+        rotated_image.save(buffer, format='PNG')
+        image.file.save(f'rotated_{image.file.name}', ContentFile(buffer.getvalue()))
+        image.save()
+
+        serializer = ImageSerializer(image)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    except Image.DoesNotExist:
+        return Response({"error": "Image not found"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({"error": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
