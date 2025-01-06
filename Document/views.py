@@ -1,5 +1,6 @@
 import io
 import os
+from django.http import Http404
 from django.shortcuts import get_object_or_404, render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -160,20 +161,36 @@ def pdf_list(request):
 @api_view(['GET'])
 def image_detail(request, id):
     try:
+        # Attempt to fetch the image by ID
         image = get_object_or_404(Image, id=id)
         serializer = ImageSerializer(image)
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except Http404:
+        # Handle the case where the image is not found
+        return Response({"error": "Image not found."}, status=status.HTTP_404_NOT_FOUND)
+    except ValueError as ve:
+        # Handle value-related errors (e.g., invalid ID format)
+        return Response({"error": f"Invalid ID: {str(ve)}"}, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
-        return Response({"error": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        # Catch any other unexpected errors
+        return Response({"error": f"An internal error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
 def pdf_detail(request, id):
     try:
+        # Attempt to fetch the PDF by ID
         pdf = get_object_or_404(PDF, id=id)
         serializer = PDFSerializer(pdf)
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except Http404:
+        # Handle the case where the PDF is not found
+        return Response({"error": "PDF not found."}, status=status.HTTP_404_NOT_FOUND)
+    except ValueError as ve:
+        # Handle value-related errors (e.g., invalid ID format)
+        return Response({"error": f"Invalid ID: {str(ve)}"}, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
-        return Response({"error": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        # Catch any other unexpected errors
+        return Response({"error": f"An internal error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['DELETE'])
 def image_delete(request, id):
