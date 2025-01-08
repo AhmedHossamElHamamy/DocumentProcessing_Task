@@ -28,11 +28,9 @@ SECRET_KEY = 'django-insecure-o-f$u(()_p!6hfw%9xvi1&-$cu^f)yttn0!)!s#jlmad#wa9hk
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-# Add for Docker environment
-if os.environ.get('DEBUG') == '1':
-    DEBUG = True
-else:
-    DEBUG = False
+
+DEBUG = True
+
 
 # Application definition
 
