@@ -17,6 +17,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
@@ -26,8 +27,12 @@ SECRET_KEY = 'django-insecure-o-f$u(()_p!6hfw%9xvi1&-$cu^f)yttn0!)!s#jlmad#wa9hk
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['*']
+# Add for Docker environment
+if os.environ.get('DEBUG') == '1':
+    DEBUG = True
+else:
+    DEBUG = False
 
 # Application definition
 
