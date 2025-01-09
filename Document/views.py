@@ -83,62 +83,46 @@ def upload_file(request):
 #Extra API to get file in base64
 @api_view(['POST'])
 def file_to_base64(request):
-    # Get the file path from the request data
-    file_path = request.data.get('file_path')
+    """
+    Handles file uploads, validates the file type, and returns the base64-encoded string.
+    """
+    # Check if a file is provided in the request
+    if 'file' not in request.FILES:
+        return Response({"error": "No file provided"}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Validate the file path
-    if not file_path:
-        return Response({"error": "File path is required"}, status=status.HTTP_400_BAD_REQUEST)
+    uploaded_file = request.FILES['file']
 
-    # Convert to absolute path
-    absolute_path = os.path.abspath(file_path)
+    # Validate file type (image or PDF)
+    allowed_image_extensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff']
+    allowed_pdf_extensions = ['pdf']
 
-    # Security: Prevent directory traversal attacks
-    if ".." in absolute_path or not os.path.exists(absolute_path):
-        return Response({"error": "Invalid file path"}, status=status.HTTP_400_BAD_REQUEST)
+    file_extension = uploaded_file.name.split('.')[-1].lower()
 
-    # Get file extension
-    _, file_extension = os.path.splitext(absolute_path)
-    file_extension = file_extension.lower()
-
-    # List of image extensions
-    image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff']
-    # List of PDF extensions
-    pdf_extensions = ['.pdf']
-
-    if file_extension in image_extensions:
-        try:
-            # Open the image file using the alias
-            with PILImage.open(absolute_path) as img:
-                # Get image properties
-                width, height = img.size
-                # Read the image content and encode to base64
-                with open(absolute_path, "rb") as file:
-                    base64_data = base64.b64encode(file.read()).decode("utf-8")
-                # Return base64 data and image properties
-                return Response({
-                    "base64": base64_data
-                }, status=status.HTTP_200_OK)
-        except PermissionError:
-            return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
-        except Exception as e:
-            return Response({"error": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    elif file_extension in pdf_extensions:
-        try:
-            # Read the PDF file and encode to base64
-            with open(absolute_path, "rb") as file:
-                base64_data = base64.b64encode(file.read()).decode("utf-8")
-            # Return base64 data
-            return Response({
-                "base64": base64_data
-            }, status=status.HTTP_200_OK)
-        except PermissionError:
-            return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
-        except Exception as e:
-            return Response({"error": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    else:
+    if file_extension not in allowed_image_extensions + allowed_pdf_extensions:
         return Response({"error": "Unsupported file type"}, status=status.HTTP_400_BAD_REQUEST)
 
+    try:
+        # Read the file content
+        file_content = uploaded_file.read()
+
+        # If it's an image, validate it using PIL
+        if file_extension in allowed_image_extensions:
+            try:
+                # Open the image using PIL to validate it
+                img = PILImage.open(io.BytesIO(file_content))
+                img.verify()  # Verify that it is a valid image
+                img.close()
+            except Exception as e:
+                return Response({"error": f"Invalid image file: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Encode the file content to base64
+        base64_data = base64.b64encode(file_content).decode("utf-8")
+
+        # Return the base64-encoded data
+        return Response({"base64": base64_data}, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({"error": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
 def image_list(request):
